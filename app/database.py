@@ -39,6 +39,16 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+def initialize_database():
+    """Ensure the SQLite schema exists before the app starts querying it."""
+    try:
+        from . import models  # noqa: F401
+        Base.metadata.create_all(bind=engine)
+        return True
+    except Exception:
+        return False
+
+
 def get_db():
     """FastAPI dependency for database sessions."""
     db = SessionLocal()

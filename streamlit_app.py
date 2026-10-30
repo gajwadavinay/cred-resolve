@@ -5,7 +5,7 @@ from app.agent_manager import get_agent_summary, recover_expired_reservations
 from app.borrower_manager import get_eligible_borrowers, release_expired_borrower_reservations
 from app.data_cleaning import compute_account_eligibility
 from app.data_ingestion import run_full_ingestion
-from app.database import SessionLocal
+from app.database import SessionLocal, initialize_database
 from app.predictive_engine import compute_pacing_recommendation, get_historical_stats
 from app.progressive_dialer import run_progressive_cycle
 from app.safety_controller import evaluate_request
@@ -13,6 +13,7 @@ from app.allocator import allocate_and_dial, get_provider_health
 from app.call_manager import get_active_call_counts
 
 
+initialize_database()
 st.set_page_config(page_title="SmartDialer Streamlit", layout="wide")
 
 
@@ -24,16 +25,28 @@ def get_db():
         pass
 
 
+def _safe_count(db, table_name: str):
+    try:
+        return db.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar() or 0
+    except Exception:
+        return 0
+
+
 @st.cache_data(ttl=10)
 def fetch_health():
     db = SessionLocal()
     try:
-        db.execute(text("SELECT 1"))
-        agents_loaded = db.execute(text("SELECT COUNT(*) FROM agents")).scalar() or 0
-        borrowers_loaded = db.execute(text("SELECT COUNT(*) FROM borrowers")).scalar() or 0
-        hist_calls = db.execute(text("SELECT COUNT(*) FROM historical_calls")).scalar() or 0
+        try:
+            db.execute(text("SELECT 1"))
+            db_connected = True
+        except Exception:
+            db_connected = False
+
+        agents_loaded = _safe_count(db, "agents")
+        borrowers_loaded = _safe_count(db, "borrowers")
+        hist_calls = _safe_count(db, "historical_calls")
         return {
-            "db_connected": True,
+            "db_connected": db_connected,
             "agents_loaded": agents_loaded,
             "borrowers_loaded": borrowers_loaded,
             "historical_calls": hist_calls,
@@ -46,22 +59,31 @@ def fetch_health():
 def fetch_agent_summary():
     db = SessionLocal()
     try:
-        summary = get_agent_summary(db)
-        return summary
+        try:
+            summary = get_agent_summary(db)
+            return summary
+        except Exception:
+            return {"available": 0, "reserved": 0, "connected": 0}
     finally:
         db.close()
 
 
 @st.cache_data(ttl=10)
 def fetch_provider_health():
-    return get_provider_health()
+    try:
+        return get_provider_health()
+    except Exception:
+        return {}
 
 
 @st.cache_data(ttl=10)
 def fetch_historical_stats():
     db = SessionLocal()
     try:
-        return get_historical_stats(db)
+        try:
+            return get_historical_stats(db)
+        except Exception:
+            return {"historical_answer_rate": 0.0, "historical_avg_talk_time": 0.0}
     finally:
         db.close()
 
@@ -70,7 +92,10 @@ def fetch_historical_stats():
 def fetch_eligible_borrowers(limit: int = 20):
     db = SessionLocal()
     try:
-        return get_eligible_borrowers(db, limit=limit)
+        try:
+            return get_eligible_borrowers(db, limit=limit)
+        except Exception:
+            return []
     finally:
         db.close()
 
