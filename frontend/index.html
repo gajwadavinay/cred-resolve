@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartDialer — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #080c14;
+      --surface:   #0d1220;
+      --card:      #111827;
+      --border:    #1e2d45;
+      --accent:    #3b82f6;
+      --accent2:   #8b5cf6;
+      --green:     #10b981;
+      --yellow:    #f59e0b;
+      --red:       #ef4444;
+      --cyan:      #06b6d4;
+      --text:      #f1f5f9;
+      --muted:     #64748b;
+      --radius:    12px;
+      --glow:      0 0 24px rgba(59,130,246,0.18);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 220px; min-width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      padding: 24px 0; gap: 4px;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .logo {
+      padding: 0 20px 28px;
+      font-size: 20px; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .logo span { font-size: 11px; font-weight: 400; opacity: .6; display: block; margin-top: 2px; -webkit-text-fill-color: var(--muted); }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; cursor: pointer;
+      color: var(--muted); font-size: 13.5px; font-weight: 500;
+      border-radius: 0; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover { color: var(--text); background: rgba(59,130,246,.06); }
+    .nav-item.active {
+      color: var(--accent); background: rgba(59,130,246,.1);
+      border-left-color: var(--accent);
+    }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow-y: auto; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 700; }
+    .topbar .status-dot {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    .dot.red { background: var(--red); animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .page { display: none; padding: 28px 32px; }
+    .page.active { display: block; }
+
+    /* ── Stats Grid ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--glow); }
+    .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .stat-card .value { font-size: 32px; font-weight: 800; line-height: 1; }
+    .stat-card .sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .stat-card .value.green { color: var(--green); }
+    .stat-card .value.yellow { color: var(--yellow); }
+    .stat-card .value.red { color: var(--red); }
+    .stat-card .value.accent { color: var(--accent); }
+    .stat-card .value.cyan { color: var(--cyan); }
+    .stat-card .value.purple { color: var(--accent2); }
+
+    /* ── Sections ── */
+    .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    }
+    .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all .2s; font-family: 'Inter', sans-serif;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #2563eb; box-shadow: 0 0 16px rgba(59,130,246,.4); }
+    .btn-purple { background: var(--accent2); color: #fff; }
+    .btn-purple:hover { background: #7c3aed; }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { background: #059669; }
+    .btn-outline {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 9px 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color .2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid var(--border); }
+    td { padding: 11px 12px; border-bottom: 1px solid rgba(30,45,69,.5); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(59,130,246,.03); }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-green  { background: rgba(16,185,129,.15); color: var(--green); }
+    .badge-yellow { background: rgba(245,158,11,.15);  color: var(--yellow); }
+    .badge-red    { background: rgba(239,68,68,.15);   color: var(--red); }
+    .badge-blue   { background: rgba(59,130,246,.15);  color: var(--accent); }
+    .badge-purple { background: rgba(139,92,246,.15);  color: var(--accent2); }
+    .badge-gray   { background: rgba(100,116,139,.15); color: var(--muted); }
+
+    /* ── Progress bar ── */
+    .progress-bar { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .6s ease; }
+
+    /* ── JSON viewer ── */
+    .json-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px; font-size: 12px;
+      font-family: 'Courier New', monospace; color: var(--cyan);
+      white-space: pre-wrap; word-break: break-word; max-height: 360px; overflow-y: auto;
+    }
+
+    /* ── Alert ── */
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+    .alert-info    { background: rgba(59,130,246,.1);  border: 1px solid rgba(59,130,246,.3); color: #93c5fd; }
+    .alert-success { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #6ee7b7; }
+    .alert-error   { background: rgba(239,68,68,.1);   border: 1px solid rgba(239,68,68,.3);   color: #fca5a5; }
+
+    /* ── Agent grid ── */
+    .agent-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .agent-chip {
+      padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.2); color: var(--accent);
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.2);
+      border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Refresh button ── */
+    .refresh-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .last-updated { font-size: 11px; color: var(--muted); }
+
+    /* ── Donut chart ── */
+    .donut-wrap { display: flex; align-items: center; gap: 24px; }
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">⚡ SmartDialer <span>Collections Dialer v1.0</span></div>
+    <div class="nav-item active" onclick="showPage('dashboard', this)" id="nav-dashboard">
+      <span class="icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('agents', this)" id="nav-agents">
+      <span class="icon">👤</span> Agents
+    </div>
+    <div class="nav-item" onclick="showPage('dialer', this)" id="nav-dialer">
+      <span class="icon">📞</span> Dialer
+    </div>
+    <div class="nav-item" onclick="showPage('analytics', this)" id="nav-analytics">
+      <span class="icon">📊</span> Analytics
+    </div>
+    <div class="nav-item" onclick="showPage('simulation', this)" id="nav-simulation">
+      <span class="icon">🧪</span> Simulation
+    </div>
+    <div class="nav-item" onclick="showPage('data', this)" id="nav-data">
+      <span class="icon">🗄️</span> Data
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <h1 id="page-title">Dashboard</h1>
+      <div class="status-dot">
+        <div class="dot" id="api-dot"></div>
+        <span id="api-status-text">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="refresh-row">
+        <span class="section-title">Live Overview</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="last-updated" id="dash-updated"></span>
+          <button class="btn btn-outline" onclick="loadDashboard()">↻ Refresh</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="dash-stats">
+        <div class="stat-card"><div class="label">DB Status</div><div class="value accent" id="s-db">—</div></div>
+        <div class="stat-card"><div class="label">Total Agents</div><div class="value accent" id="s-agents">—</div></div>
+        <div class="stat-card"><div class="label">Available Agents</div><div class="value green" id="s-avail">—</div></div>
+        <div class="stat-card"><div class="label">Active Calls</div><div class="value yellow" id="s-calls">—</div></div>
+        <div class="stat-card"><div class="label">Connected Calls</div><div class="value cyan" id="s-connected">—</div></div>
+        <div class="stat-card"><div class="label">Borrowers Loaded</div><div class="value purple" id="s-borrowers">—</div></div>
+        <div class="stat-card"><div class="label">Historical Calls</div><div class="value accent" id="s-hist">—</div></div>
+        <div class="stat-card"><div class="label">Pacing Ratio</div><div class="value yellow" id="s-pacing">—</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <h3>Agent Utilization</h3>
+          <div id="agent-util-bar">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;">
+              <span>Busy agents</span><span id="util-pct">—</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="util-fill" style="width:0%"></div></div>
+          </div>
+          <div style="margin-top:16px;" id="agent-status-chips"></div>
+        </div>
+        <div class="card">
+          <h3>Provider Health</h3>
+          <div id="provider-health-list"><span style="color:var(--muted);font-size:13px;">Loading…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="page" id="page-agents">
+      <div class="refresh-row">
+        <span class="section-title">Agent Management</span>
+        <div style="display:flex;gap:8px;">
+          <select id="agent-filter" onchange="loadAgents()" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;outline:none;">
+            <option value="">All Statuses</option>
+            <option value="available">Available</option>
+            <option value="reserved">Reserved</option>
+            <option value="dialing">Dialing</option>
+            <option value="connected">Connected</option>
+            <option value="wrap_up">Wrap Up</option>
+            <option value="offline">Offline</option>
+          </select>
+          <button class="btn btn-outline" onclick="loadAgents()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Skill Level</th><th>Campaign</th><th>Calls Handled</th></tr></thead>
+            <tbody id="agents-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIALER -->
+    <div class="page" id="page-dialer">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Progressive -->
+        <div class="card">
+          <h3>📞 Progressive Dialer <span class="badge badge-blue" style="margin-left:6px;">1:1 Ratio</span></h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Strict one agent per call. Maximum safety compliance.</p>
+          <div class="form-group">
+            <label>Campaign ID (optional)</label>
+            <input id="prog-campaign" type="text" placeholder="e.g. camp_001" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Max Calls</label>
+              <input id="prog-max" type="number" value="5" min="1" max="100" />
+            </div>
+            <div class="form-group">
+              <label>Dry Run</label>
+              <select id="prog-dry">
+                <option value="true">Yes (simulate)</option>
+                <option value="false">No (live)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="prog-btn" onclick="runProgressive()">▶ Run Progressive Cycle</button>
+          <div id="prog-result" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- Predictive -->
+        <div class="card">
+          <h3>🤖 Predictive Dialer <span class="badge badge-purple" style="margin-left:6px;">AI Pacing</span></h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Erlang-formula pacing with Safety Controller approval.</p>
+          <div class="form-group">
+            <label>Campaign ID (optional)</label>
+            <input id="pred-campaign" type="text" placeholder="e.g. camp_001" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Max Calls</label>
+              <input id="pred-max" type="number" value="10" min="1" max="100" />
+            </div>
+            <div class="form-group">
+              <label>Dry Run</label>
+              <select id="pred-dry">
+                <option value="true">Yes (simulate)</option>
+                <option value="false">No (live)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-purple" id="pred-btn" onclick="runPredictive()">▶ Run Predictive Cycle</button>
+          <div id="pred-result" style="margin-top:16px;"></div>
+        </div>
+      </div>
+
+      <!-- Dialer Status -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3>Live Dialer Status</h3>
+          <button class="btn btn-outline" onclick="loadDialerStatus()">↻ Refresh</button>
+        </div>
+        <div id="dialer-status-content"><span style="color:var(--muted);font-size:13px;">Click Refresh to load.</span></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="refresh-row">
+        <span class="section-title">Historical Analytics</span>
+        <button class="btn btn-outline" onclick="loadAnalytics()">↻ Refresh</button>
+      </div>
+      <div id="analytics-content"><div class="alert alert-info">Click Refresh to load analytics data.</div></div>
+    </div>
+
+    <!-- SIMULATION -->
+    <div class="page" id="page-simulation">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div class="card">
+          <h3>🧪 Run Simulation</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Scenario</label>
+              <select id="sim-scenario">
+                <option value="A">A — Normal</option>
+                <option value="B">B — High Volume</option>
+                <option value="C">C — Low Answer Rate</option>
+                <option value="D">D — Peak Hours</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Dialer Mode</label>
+              <select id="sim-mode">
+                <option value="PROGRESSIVE">Progressive</option>
+                <option value="PREDICTIVE">Predictive</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Number of Agents</label>
+              <input id="sim-agents" type="number" value="20" min="5" max="200" />
+            </div>
+            <div class="form-group">
+              <label>Steps</label>
+              <input id="sim-steps" type="number" value="10" min="1" max="50" />
+            </div>
+          </div>
+          <button class="btn btn-green" id="sim-btn" onclick="runSimulation()">▶ Run Simulation</button>
+          <div id="sim-result" style="margin-top:16px;"></div>
+        </div>
+
+        <div class="card">
+          <h3>🚀 Run All Scenarios</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Runs all 4 scenarios (A–D) × both modes = 8 simulation runs. May take 30–60 seconds.</p>
+          <div class="form-group">
+            <label>Number of Agents</label>
+            <input id="all-agents" type="number" value="20" min="5" max="200" />
+          </div>
+          <button class="btn btn-outline" id="all-btn" onclick="runAllScenarios()">▶ Run All Scenarios</button>
+          <div id="all-result" style="margin-top:16px;"></div>
+        </div>
+      </div>
+
+      <!-- Past Results -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3>Past Simulation Runs</h3>
+          <button class="btn btn-outline" onclick="loadSimResults()">↻ Refresh</button>
+        </div>
+        <div id="sim-results-content"><span style="color:var(--muted);font-size:13px;">Click Refresh to load.</span></div>
+      </div>
+    </div>
+
+    <!-- DATA -->
+    <div class="page" id="page-data">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div class="card">
+          <h3>📥 Data Import</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Ingest raw CSVs into SQLite. Idempotent — safe to run multiple times.</p>
+          <button class="btn btn-primary" id="import-btn" onclick="runImport()">▶ Import Data</button>
+          <div id="import-result" style="margin-top:16px;"></div>
+        </div>
+        <div class="card">
+          <h3>📋 Data Profiling</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Run data quality checks and profiling report.</p>
+          <button class="btn btn-outline" id="profile-btn" onclick="runProfile()">▶ Run Profiling</button>
+          <div id="profile-result" style="margin-top:16px;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>✅ Eligible Borrowers</h3>
+        <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+          <input id="borrow-limit" type="number" value="20" min="1" max="500" style="width:100px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:13px;outline:none;" />
+          <button class="btn btn-outline" onclick="loadBorrowers()">Load Eligible Borrowers</button>
+        </div>
+        <div id="borrowers-content"><span style="color:var(--muted);font-size:13px;">Click Load to fetch.</span></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+  const API = 'http://127.0.0.1:8080';
+
+  // ── Navigation ──────────────────────────────────────────
+  const PAGE_TITLES = {
+    dashboard: 'Dashboard', agents: 'Agents',
+    dialer: 'Dialer', analytics: 'Analytics',
+    simulation: 'Simulation', data: 'Data Management'
+  };
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    el.classList.add('active');
+    document.getElementById('page-title').textContent = PAGE_TITLES[name];
+
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'agents') loadAgents();
+    if (name === 'analytics') loadAnalytics();
+    if (name === 'simulation') loadSimResults();
+  }
+
+  // ── Fetch helper ─────────────────────────────────────────
+  async function api(path, method = 'GET', body = null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API + path, opts);
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+    return r.json();
+  }
+
+  // ── API Status ────────────────────────────────────────────
+  async function checkApiStatus() {
+    try {
+      const h = await api('/health');
+      document.getElementById('api-dot').classList.remove('red');
+      document.getElementById('api-status-text').textContent = h.status === 'healthy' ? 'API Online' : 'API Degraded';
+    } catch {
+      document.getElementById('api-dot').classList.add('red');
+      document.getElementById('api-status-text').textContent = 'API Offline';
+    }
+  }
+
+  // ── DASHBOARD ─────────────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const [health, status] = await Promise.all([
+        api('/health'),
+        api('/dialer/status')
+      ]);
+
+      document.getElementById('s-db').textContent = health.db_connected ? '✓ OK' : '✗ Down';
+      document.getElementById('s-agents').textContent = health.agents_loaded;
+      document.getElementById('s-borrowers').textContent = health.borrowers_loaded.toLocaleString();
+      document.getElementById('s-hist').textContent = health.historical_calls.toLocaleString();
+      document.getElementById('s-avail').textContent = status.available_agents;
+      document.getElementById('s-calls').textContent = status.active_calls;
+      document.getElementById('s-connected').textContent = status.connected_calls;
+      document.getElementById('s-pacing').textContent = (status.pacing_ratio * 100).toFixed(1) + '%';
+
+      // Utilization bar
+      const pct = Math.min(100, (status.pacing_ratio * 100)).toFixed(1);
+      document.getElementById('util-pct').textContent = pct + '%';
+      document.getElementById('util-fill').style.width = pct + '%';
+
+      // Agent chips
+      const snap = status.agent_summary;
+      const chipsEl = document.getElementById('agent-status-chips');
+      chipsEl.innerHTML = '';
+      const colors = { available:'green', reserved:'yellow', dialing:'yellow', connected:'cyan', wrap_up:'purple', offline:'gray' };
+      for (const [k, v] of Object.entries(snap)) {
+        if (k === 'total') continue;
+        const chip = document.createElement('div');
+        chip.className = `badge badge-${colors[k] || 'blue'}`;
+        chip.style.padding = '4px 10px';
+        chip.textContent = `${k}: ${v}`;
+        chipsEl.appendChild(chip);
+      }
+
+      // Provider health
+      const ph = status.provider_health;
+      const phEl = document.getElementById('provider-health-list');
+      phEl.innerHTML = '';
+      for (const [name, info] of Object.entries(ph)) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;';
+        const healthy = info.healthy !== false;
+        row.innerHTML = `
+          <span>${name}</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="color:var(--muted);font-size:11px;">Fail: ${((info.failure_rate||0)*100).toFixed(1)}%</span>
+            <span class="badge ${healthy ? 'badge-green' : 'badge-red'}">${healthy ? 'Healthy' : 'Degraded'}</span>
+          </div>`;
+        phEl.appendChild(row);
+      }
+
+      document.getElementById('dash-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  // ── AGENTS ────────────────────────────────────────────────
+  async function loadAgents() {
+    const filter = document.getElementById('agent-filter').value;
+    const url = '/agents?limit=100' + (filter ? '&status=' + filter : '');
+    const tbody = document.getElementById('agents-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">Loading…</td></tr>';
+    try {
+      const agents = await api(url);
+      if (!agents.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">No agents found.</td></tr>';
+        return;
+      }
+      const statusBadge = (s) => {
+        const map = { AVAILABLE:'green', RESERVED:'yellow', DIALING:'yellow', CONNECTED:'cyan', WRAP_UP:'purple', OFFLINE:'gray' };
+        return `<span class="badge badge-${map[s]||'blue'}">${s}</span>`;
+      };
+      tbody.innerHTML = agents.map(a => `
+        <tr>
+          <td style="color:var(--muted);font-size:11px;">${a.id.substring(0,8)}…</td>
+          <td style="font-weight:500;">${a.name}</td>
+          <td>${statusBadge(a.status)}</td>
+          <td><span style="color:var(--accent);">${a.skill_level || '—'}</span></td>
+          <td style="color:var(--muted);">${a.campaign_id || '—'}</td>
+          <td>${a.calls_handled ?? 0}</td>
+        </tr>`).join('');
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:24px;">${e.message}</td></tr>`;
+    }
+  }
+
+  // ── DIALER ────────────────────────────────────────────────
+  async function runProgressive() {
+    const btn = document.getElementById('prog-btn');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Running…';
+    document.getElementById('prog-result').innerHTML = '';
+    try {
+      const result = await api('/dialer/progressive/run', 'POST', {
+        campaign_id: document.getElementById('prog-campaign').value || null,
+        max_calls: parseInt(document.getElementById('prog-max').value),
+        dry_run: document.getElementById('prog-dry').value === 'true'
+      });
+      document.getElementById('prog-result').innerHTML = `
+        <div class="alert alert-success">
+          ✅ ${result.calls_initiated} calls initiated &nbsp;|&nbsp; ${result.calls_rejected_safety || 0} rejected by safety
+        </div>
+        <div class="json-box">${JSON.stringify(result, null, 2)}</div>`;
+    } catch(e) {
+      document.getElementById('prog-result').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.innerHTML = '▶ Run Progressive Cycle';
+    }
+  }
+
+  async function runPredictive() {
+    const btn = document.getElementById('pred-btn');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Running…';
+    document.getElementById('pred-result').innerHTML = '';
+    try {
+      const result = await api('/dialer/predictive/run', 'POST', {
+        campaign_id: document.getElementById('pred-campaign').value || null,
+        max_calls: parseInt(document.getElementById('pred-max').value),
+        dry_run: document.getElementById('pred-dry').value === 'true'
+      });
+      document.getElementById('pred-result').innerHTML = `
+        <div class="alert alert-success">
+          ✅ ${result.calls_initiated} initiated &nbsp;|&nbsp; Safety: <strong>${result.safety_decision}</strong> &nbsp;|&nbsp; Pacing: ${result.pacing_recommendation}
+        </div>
+        <div class="json-box">${JSON.stringify(result, null, 2)}</div>`;
+    } catch(e) {
+      document.getElementById('pred-result').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.innerHTML = '▶ Run Predictive Cycle';
+    }
+  }
+
+  async function loadDialerStatus() {
+    const el = document.getElementById('dialer-status-content');
+    el.innerHTML = '<span style="color:var(--muted);">Loading…</span>';
+    try {
+      const s = await api('/dialer/status');
+      el.innerHTML = `
+        <div class="stats-grid" style="margin-bottom:12px;">
+          <div class="stat-card"><div class="label">Active Calls</div><div class="value yellow">${s.active_calls}</div></div>
+          <div class="stat-card"><div class="label">Ringing</div><div class="value cyan">${s.ringing_calls}</div></div>
+          <div class="stat-card"><div class="label">Connected</div><div class="value green">${s.connected_calls}</div></div>
+          <div class="stat-card"><div class="label">Available</div><div class="value accent">${s.available_agents}</div></div>
+          <div class="stat-card"><div class="label">Pacing Ratio</div><div class="value yellow">${(s.pacing_ratio*100).toFixed(1)}%</div></div>
+        </div>`;
+    } catch(e) {
+      el.innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    }
+  }
+
+  // ── ANALYTICS ─────────────────────────────────────────────
+  async function loadAnalytics() {
+    const el = document.getElementById('analytics-content');
+    el.innerHTML = '<div class="alert alert-info">Loading analytics…</div>';
+    try {
+      const [summary, hist] = await Promise.all([
+        api('/analytics/summary'),
+        api('/analytics/historical-stats')
+      ]);
+      el.innerHTML = `
+        <div class="stats-grid" style="margin-bottom:20px;">
+          <div class="stat-card"><div class="label">Answer Rate</div><div class="value green">${((hist.historical_answer_rate||0)*100).toFixed(1)}%</div><div class="sub">Historical</div></div>
+          <div class="stat-card"><div class="label">Avg Talk Time</div><div class="value cyan">${Math.round(hist.historical_avg_talk_time||0)}s</div><div class="sub">Historical</div></div>
+          <div class="stat-card"><div class="label">Total Calls</div><div class="value accent">${(hist.total_historical_calls||0).toLocaleString()}</div><div class="sub">In dataset</div></div>
+          <div class="stat-card"><div class="label">Unique Borrowers</div><div class="value purple">${(summary.unique_borrowers||0).toLocaleString()}</div></div>
+        </div>
+        <div class="card">
+          <h3>Full Analytics Data</h3>
+          <div class="json-box">${JSON.stringify(summary, null, 2)}</div>
+        </div>`;
+    } catch(e) {
+      el.innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    }
+  }
+
+  // ── SIMULATION ────────────────────────────────────────────
+  async function runSimulation() {
+    const btn = document.getElementById('sim-btn');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Running…';
+    document.getElementById('sim-result').innerHTML = '';
+    try {
+      const result = await api('/simulation/run', 'POST', {
+        scenario: document.getElementById('sim-scenario').value,
+        dialer_mode: document.getElementById('sim-mode').value,
+        num_agents: parseInt(document.getElementById('sim-agents').value),
+        steps: parseInt(document.getElementById('sim-steps').value),
+        campaign_id: null
+      });
+      document.getElementById('sim-result').innerHTML = `
+        <div class="alert alert-success">
+          ✅ Scenario ${result.scenario} — ${result.calls_initiated} calls | ${result.calls_answered} answered | Util: ${((result.agent_utilization||0)*100).toFixed(1)}%
+        </div>
+        <div class="json-box">${JSON.stringify(result, null, 2)}</div>`;
+      loadSimResults();
+    } catch(e) {
+      document.getElementById('sim-result').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.innerHTML = '▶ Run Simulation';
+    }
+  }
+
+  async function runAllScenarios() {
+    const btn = document.getElementById('all-btn');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Running 8 scenarios…';
+    document.getElementById('all-result').innerHTML = '<div class="alert alert-info">This may take 30–60 seconds…</div>';
+    try {
+      const agents = document.getElementById('all-agents').value;
+      const result = await api(`/simulation/run-all-scenarios?num_agents=${agents}`, 'POST');
+      const s = result.summary || {};
+      document.getElementById('all-result').innerHTML = `
+        <div class="alert alert-success">✅ ${result.runs} runs completed.</div>
+        <div class="stats-grid" style="margin-top:12px;">
+          <div class="stat-card"><div class="label">Progressive Calls</div><div class="value accent">${s.progressive?.avg_calls_initiated||0}</div><div class="sub">avg initiated</div></div>
+          <div class="stat-card"><div class="label">Predictive Calls</div><div class="value purple">${s.predictive?.avg_calls_initiated||0}</div><div class="sub">avg initiated</div></div>
+          <div class="stat-card"><div class="label">Progressive Util</div><div class="value green">${((s.progressive?.avg_agent_utilization||0)*100).toFixed(1)}%</div></div>
+          <div class="stat-card"><div class="label">Predictive Util</div><div class="value yellow">${((s.predictive?.avg_agent_utilization||0)*100).toFixed(1)}%</div></div>
+        </div>`;
+      loadSimResults();
+    } catch(e) {
+      document.getElementById('all-result').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.innerHTML = '▶ Run All Scenarios';
+    }
+  }
+
+  async function loadSimResults() {
+    const el = document.getElementById('sim-results-content');
+    try {
+      const results = await api('/simulation/results');
+      if (!results.length) {
+        el.innerHTML = '<span style="color:var(--muted);font-size:13px;">No simulations run yet.</span>';
+        return;
+      }
+      el.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Scenario</th><th>Mode</th><th>Agents</th><th>Steps</th><th>Calls Init</th><th>Answered</th><th>Utilization</th><th>Safety</th></tr></thead>
+            <tbody>${results.slice().reverse().slice(0,20).map((r, i) => `
+              <tr>
+                <td style="color:var(--muted);">${i+1}</td>
+                <td><span class="badge badge-blue">Scenario ${r.scenario}</span></td>
+                <td><span class="badge ${r.dialer_mode==='PREDICTIVE'?'badge-purple':'badge-green'}">${r.dialer_mode}</span></td>
+                <td>${r.num_agents}</td>
+                <td>${r.steps}</td>
+                <td style="font-weight:600;">${r.calls_initiated||0}</td>
+                <td style="color:var(--green);">${r.calls_answered||0}</td>
+                <td>${((r.agent_utilization||0)*100).toFixed(1)}%</td>
+                <td>${r.safety_approvals||0}✓ / ${r.safety_rejections||0}✗</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    } catch(e) {
+      el.innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    }
+  }
+
+  // ── DATA ─────────────────────────────────────────────────
+  async function runImport() {
+    const btn = document.getElementById('import-btn');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Importing…';
+    document.getElementById('import-result').innerHTML = '<div class="alert alert-info">Importing data (may take 30s)…</div>';
+    try {
+      const result = await api('/data/import', 'POST');
+      document.getElementById('import-result').innerHTML = `
+        <div class="alert alert-success">✅ ${result.message}</div>
+        <div class="json-box">${JSON.stringify(result.ingestion_summary||{}, null, 2)}</div>`;
+    } catch(e) {
+      document.getElementById('import-result').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.innerHTML = '▶ Import Data';
+    }
+  }
+
+  async function runProfile() {
+    const btn = document.getElementById('profile-btn');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Profiling…';
+    document.getElementById('profile-result').innerHTML = '';
+    try {
+      const result = await api('/data/profile');
+      document.getElementById('profile-result').innerHTML = `
+        <div class="alert alert-success">✅ Profiling complete.</div>
+        <div class="json-box">${JSON.stringify(result, null, 2)}</div>`;
+    } catch(e) {
+      document.getElementById('profile-result').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.innerHTML = '▶ Run Profiling';
+    }
+  }
+
+  async function loadBorrowers() {
+    const limit = document.getElementById('borrow-limit').value;
+    const el = document.getElementById('borrowers-content');
+    el.innerHTML = '<span style="color:var(--muted);">Loading…</span>';
+    try {
+      const data = await api(`/borrowers/eligible?limit=${limit}`);
+      const counts = data.counts || {};
+      const list = data.eligible_borrowers || [];
+      el.innerHTML = `
+        <div class="stats-grid" style="margin-bottom:16px;">
+          <div class="stat-card"><div class="label">Total</div><div class="value accent">${(counts.total||0).toLocaleString()}</div></div>
+          <div class="stat-card"><div class="label">Eligible</div><div class="value green">${(counts.eligible||0).toLocaleString()}</div></div>
+          <div class="stat-card"><div class="label">Ineligible</div><div class="value red">${(counts.ineligible||0).toLocaleString()}</div></div>
+        </div>
+        ${list.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Account ID</th><th>Phone</th><th>Balance</th><th>DPD</th><th>Campaign</th></tr></thead>
+            <tbody>${list.slice(0,20).map(b=>`
+              <tr>
+                <td style="font-size:11px;color:var(--muted);">${b.account_id||'—'}</td>
+                <td>${b.phone||'—'}</td>
+                <td style="color:var(--yellow);">$${(b.balance||0).toLocaleString()}</td>
+                <td><span class="badge ${(b.days_past_due||0)>60?'badge-red':(b.days_past_due||0)>30?'badge-yellow':'badge-green'}">${b.days_past_due||0}d</span></td>
+                <td style="color:var(--muted);">${b.campaign_id||'—'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : '<span style="color:var(--muted);font-size:13px;">No eligible borrowers found.</span>'}`;
+    } catch(e) {
+      el.innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────
+  checkApiStatus();
+  loadDashboard();
+  setInterval(checkApiStatus, 15000);
+</script>
+</body>
+</html>
