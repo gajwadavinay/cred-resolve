@@ -13,7 +13,12 @@ from app.allocator import allocate_and_dial, get_provider_health
 from app.call_manager import get_active_call_counts
 
 
-initialize_database()
+bootstrap_error = None
+try:
+    initialize_database()
+except Exception as exc:
+    bootstrap_error = exc
+
 st.set_page_config(page_title="SmartDialer Streamlit", layout="wide")
 
 
@@ -202,6 +207,11 @@ def run_predictive_action(max_calls: int, dry_run: bool):
 
 
 st.title("SmartDialer Streamlit Dashboard")
+
+if bootstrap_error is not None:
+    st.warning(
+        f"Database bootstrap warning: {bootstrap_error}. The app will continue in a degraded mode and create tables on first data import."
+    )
 
 if "last_import" not in st.session_state:
     st.session_state["last_import"] = None
